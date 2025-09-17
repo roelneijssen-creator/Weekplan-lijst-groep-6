@@ -1,0 +1,1514 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weekplan Tracker</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header.student-mode {
+            background: linear-gradient(45deg, #2196F3, #1976D2);
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 10px,
+                rgba(255,255,255,0.1) 10px,
+                rgba(255,255,255,0.1) 20px
+            );
+            animation: slide 20s linear infinite;
+        }
+
+        @keyframes slide {
+            0% { transform: translateX(-50px); }
+            100% { transform: translateX(50px); }
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            position: relative;
+            z-index: 1;
+        }
+
+        .mode-indicator {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            background: rgba(255,255,255,0.2);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            z-index: 2;
+        }
+
+        .github-setup {
+            padding: 20px;
+            background: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            border-radius: 8px;
+            margin: 20px;
+        }
+
+        .github-setup h3 {
+            color: #0066cc;
+            margin-top: 0;
+        }
+
+        .github-setup p {
+            color: #004499;
+            margin-bottom: 15px;
+        }
+
+        .github-config {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+
+        .github-config input {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .sync-status {
+            padding: 10px;
+            border-radius: 8px;
+            margin: 20px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .sync-local {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .sync-online {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .sync-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .login-container {
+            padding: 60px 40px;
+            text-align: center;
+            background: white;
+        }
+
+        .login-form {
+            max-width: 400px;
+            margin: 0 auto;
+            background: #f8f9fa;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .login-form h2 {
+            color: #495057;
+            margin-bottom: 30px;
+        }
+
+        .login-form input {
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+
+        .login-form input:focus {
+            outline: none;
+            border-color: #4CAF50;
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+        }
+
+        .student-selector {
+            padding: 20px;
+            background: #e3f2fd;
+            border-bottom: 1px solid #bbdefb;
+            text-align: center;
+        }
+
+        .student-selector select {
+            padding: 12px 20px;
+            font-size: 16px;
+            border: 2px solid #2196F3;
+            border-radius: 8px;
+            background: white;
+            min-width: 200px;
+        }
+
+        .controls {
+            padding: 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .input-group label {
+            font-weight: 600;
+            color: #495057;
+            font-size: 0.9em;
+        }
+
+        .input-group input {
+            padding: 10px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #4CAF50;
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(45deg, #f44336, #d32f2f);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(244, 67, 54, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, #6c757d, #5a6268);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(108, 117, 125, 0.4);
+        }
+
+        .btn-warning {
+            background: linear-gradient(45deg, #ff9800, #f57c00);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 152, 0, 0.4);
+        }
+
+        .btn-info {
+            background: linear-gradient(45deg, #17a2b8, #117a8b);
+            color: white;
+        }
+
+        .btn-info:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(23, 162, 184, 0.4);
+        }
+
+        .btn-small {
+            padding: 5px 10px;
+            font-size: 12px;
+            min-width: auto;
+        }
+
+        .logout-btn {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            z-index: 2;
+        }
+
+        .table-container {
+            padding: 20px;
+            overflow-x: auto;
+        }
+
+        .weekplan-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .weekplan-table th {
+            background: linear-gradient(45deg, #2196F3, #1976D2);
+            color: white;
+            padding: 15px 12px;
+            text-align: center;
+            font-weight: 600;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .weekplan-table th:first-child {
+            text-align: left;
+            background: linear-gradient(45deg, #FF9800, #F57C00);
+        }
+
+        .weekplan-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e9ecef;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .weekplan-table td:first-child {
+            background: #fff3e0;
+            font-weight: 600;
+            color: #e65100;
+            text-align: left;
+            border-right: 2px solid #ffcc02;
+        }
+
+        .weekplan-table tr:hover td {
+            background: #f8f9ff;
+        }
+
+        .weekplan-table tr:nth-child(even) td:not(:first-child) {
+            background: #f8f9fa;
+        }
+
+        .student-mode .weekplan-table tr:not(.student-current-row):not(:first-child) {
+            display: none;
+        }
+
+        .student-current-row td {
+            background: #e8f5e8 !important;
+            font-weight: bold;
+        }
+
+        .student-current-row td:first-child {
+            background: #c8e6c9 !important;
+        }
+
+        .checkbox-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .custom-checkbox {
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .custom-checkbox:checked {
+            accent-color: #4CAF50;
+            transform: scale(1.2);
+        }
+
+        .custom-checkbox:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .progress-bar {
+            margin: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            height: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #81C784);
+            border-radius: 10px;
+            transition: width 0.5s ease;
+            position: relative;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            padding: 20px;
+            background: #f8f9fa;
+            border-top: 1px solid #dee2e6;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 15px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+            min-width: 120px;
+        }
+
+        .stat-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+
+        .empty-state h3 {
+            margin-bottom: 10px;
+            color: #495057;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .management-section {
+            margin: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .management-header {
+            background: linear-gradient(45deg, #6c757d, #5a6268);
+            color: white;
+            padding: 15px 20px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .management-content {
+            padding: 20px;
+        }
+
+        .management-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .management-item {
+            display: flex;
+            align-items: center;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 10px 15px;
+            gap: 10px;
+        }
+
+        .management-item span {
+            flex: 1;
+            min-width: 100px;
+        }
+
+        .student-progress-bar {
+            margin: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .progress-item {
+            margin-bottom: 15px;
+        }
+
+        .progress-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .progress-bar-small {
+            height: 6px;
+            background: #e9ecef;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-fill-small {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #81C784);
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
+        .instructions {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .instructions h4 {
+            margin-top: 0;
+            color: #495057;
+        }
+
+        .instructions code {
+            background: #e9ecef;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .stats {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .logout-btn {
+                position: relative;
+                margin-bottom: 10px;
+            }
+
+            .management-list {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- GitHub Setup Section -->
+        <div id="githubSetup" class="github-setup">
+            <h3>GitHub Synchronisatie</h3>
+            <p><strong>Om gegevens tussen computers te synchroniseren via GitHub:</strong></p>
+            
+            <div class="instructions">
+                <h4>Instellen (eenmalig):</h4>
+                <p>1. Maak een GitHub repository aan (bijvoorbeeld: <code>mijn-weekplan-data</code>)</p>
+                <p>2. Maak een bestand <code>data.json</code> aan met inhoud: <code>{}</code></p>
+                <p>3. Voer hieronder de GitHub URL in</p>
+                <p>4. Klik op "Configureren"</p>
+            </div>
+            
+            <div class="github-config">
+                <input type="text" id="githubUrl" placeholder="GitHub Raw URL (https://raw.githubusercontent.com/username/repo/main/data.json)">
+                <button class="btn btn-primary" onclick="configureGitHub()">Configureren</button>
+                <button class="btn btn-secondary" onclick="skipGitHub()">Lokaal Gebruik</button>
+            </div>
+
+            <div class="instructions">
+                <h4>Dagelijks gebruik:</h4>
+                <p>• <strong>Download:</strong> Haalt nieuwste gegevens van GitHub</p>
+                <p>• <strong>Upload:</strong> Toont gegevens om te kopiëren naar GitHub</p>
+                <p>• Je moet handmatig de data.json bijwerken in GitHub na elke upload</p>
+            </div>
+        </div>
+
+        <!-- Sync Status -->
+        <div id="syncStatus" class="sync-status sync-local">
+            Lokaal gebruik - Geen synchronisatie
+        </div>
+
+        <!-- Login Screen -->
+        <div id="loginScreen">
+            <div class="header">
+                <h1>Weekplan Tracker</h1>
+            </div>
+            <div class="login-container">
+                <div class="login-form">
+                    <h2>Kies je rol</h2>
+                    <button class="btn btn-primary" onclick="showTeacherLogin()" style="width: 100%; margin-bottom: 15px;">Leerkracht</button>
+                    <button class="btn btn-secondary" onclick="showStudentLogin()" style="width: 100%;">Leerling</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Teacher Login -->
+        <div id="teacherLoginScreen" class="hidden">
+            <div class="header">
+                <h1>Leerkracht Login</h1>
+                <button class="logout-btn" onclick="showMainLogin()">Terug</button>
+            </div>
+            <div class="login-container">
+                <div class="login-form">
+                    <h2>Voer je wachtwoord in</h2>
+                    <input type="password" id="teacherPassword" placeholder="Wachtwoord" onkeypress="handleTeacherLogin(event)">
+                    <button class="btn btn-primary" onclick="teacherLogin()" style="width: 100%;">Inloggen</button>
+                    <p style="font-size: 12px; color: #666; margin-top: 20px;">
+                        Standaard wachtwoord: <strong>weekplan2024</strong><br>
+                        (Dit kun je later wijzigen)
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Student Login -->
+        <div id="studentLoginScreen" class="hidden">
+            <div class="header student-mode">
+                <h1>Leerling Login</h1>
+                <button class="logout-btn" onclick="showMainLogin()">Terug</button>
+            </div>
+            <div class="login-container">
+                <div class="login-form">
+                    <h2>Selecteer je naam</h2>
+                    <select id="studentSelect" onchange="updateStudentLoginButton()">
+                        <option value="">Kies je naam...</option>
+                    </select>
+                    <br><br>
+                    <button class="btn btn-primary" id="studentLoginBtn" onclick="studentLogin()" style="width: 100%;" disabled>Inloggen</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Teacher Dashboard -->
+        <div id="teacherDashboard" class="hidden">
+            <div class="header">
+                <h1>Weekplan Beheer</h1>
+                <div class="mode-indicator">Leerkracht Modus</div>
+                <button class="logout-btn" onclick="logout()">Uitloggen</button>
+            </div>
+
+            <div class="controls">
+                <div class="input-group">
+                    <label for="studentName">Leerling naam:</label>
+                    <input type="text" id="studentName" placeholder="Voer naam in...">
+                </div>
+                <div class="input-group">
+                    <label for="taskName">Taak naam:</label>
+                    <input type="text" id="taskName" placeholder="Voer taak in...">
+                </div>
+                <button class="btn btn-primary" onclick="addStudent()">Leerling</button>
+                <button class="btn btn-primary" onclick="addTask()">Taak</button>
+                <button class="btn btn-info" onclick="downloadFromGitHub()" id="downloadBtn" style="display: none;">Download</button>
+                <button class="btn btn-warning" onclick="showUploadData()" id="uploadBtn" style="display: none;">Upload</button>
+                <button class="btn btn-secondary" onclick="changePassword()">Wachtwoord</button>
+                <button class="btn btn-danger" onclick="clearAll()">Alles Wissen</button>
+            </div>
+
+            <!-- Upload Data Modal -->
+            <div id="uploadModal" class="management-section" style="display: none;">
+                <div class="management-header">
+                    GitHub Upload Data
+                </div>
+                <div class="management-content">
+                    <p>Kopieer onderstaande data en plak het in je <code>data.json</code> bestand op GitHub:</p>
+                    <textarea id="uploadData" readonly style="width: 100%; height: 200px; margin: 10px 0; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-family: monospace; font-size: 12px;"></textarea>
+                    <button class="btn btn-secondary" onclick="copyUploadData()">Kopieer naar Klembord</button>
+                    <button class="btn btn-danger" onclick="hideUploadData()">Sluiten</button>
+                </div>
+            </div>
+
+            <!-- Student Management -->
+            <div class="management-section">
+                <div class="management-header">
+                    Leerlingen Beheren
+                </div>
+                <div class="management-content">
+                    <p>Beheer je leerlingen hier. Je kunt namen bewerken of leerlingen verwijderen.</p>
+                    <div class="management-list" id="studentManagementList">
+                        <!-- Dynamically filled -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Task Management -->
+            <div class="management-section">
+                <div class="management-header">
+                    Taken Beheren
+                </div>
+                <div class="management-content">
+                    <p>Beheer je taken hier. Je kunt taken bewerken of verwijderen.</p>
+                    <div class="management-list" id="taskManagementList">
+                        <!-- Dynamically filled -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress per student -->
+            <div class="student-progress-bar" id="studentProgressSection" style="display: none;">
+                <h3>Voortgang per Leerling</h3>
+                <div id="studentProgressList">
+                    <!-- Dynamically filled -->
+                </div>
+            </div>
+
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressBarTeacher" style="width: 0%"></div>
+            </div>
+
+            <div class="table-container" id="tableContainerTeacher">
+                <div class="empty-state">
+                    <h3>Geen gegevens beschikbaar</h3>
+                    <p>Voeg leerlingen en taken toe om te beginnen!</p>
+                </div>
+            </div>
+
+            <div class="stats" id="statsTeacher" style="display: none;">
+                <div class="stat-item">
+                    <div class="stat-number" id="totalStudentsTeacher">0</div>
+                    <div class="stat-label">Leerlingen</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="totalTasksTeacher">0</div>
+                    <div class="stat-label">Taken</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="completedTasksTeacher">0</div>
+                    <div class="stat-label">Voltooid</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="completionRateTeacher">0%</div>
+                    <div class="stat-label">Voltooiingspercentage</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Student Dashboard -->
+        <div id="studentDashboard" class="hidden">
+            <div class="header student-mode">
+                <h1 id="studentWelcome">Mijn Weekplan</h1>
+                <div class="mode-indicator">Leerling Modus</div>
+                <button class="logout-btn" onclick="logout()">Uitloggen</button>
+            </div>
+
+            <div class="student-selector">
+                <h3>Welkom, <span id="currentStudentName"></span>!</h3>
+                <p>Vink de taken af die je hebt voltooid</p>
+            </div>
+
+            <div class="student-progress-bar">
+                <h3>Mijn Voortgang</h3>
+                <div class="progress-item">
+                    <div class="progress-label">
+                        <span>Voltooide taken</span>
+                        <span id="studentProgressText">0 van 0</span>
+                    </div>
+                    <div class="progress-bar-small">
+                        <div class="progress-fill-small" id="studentProgressBar" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-container student-mode" id="tableContainerStudent">
+                <div class="empty-state">
+                    <h3>Geen taken beschikbaar</h3>
+                    <p>Je leerkracht heeft nog geen taken toegevoegd.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let students = [];
+        let tasks = [];
+        let completionData = {};
+        let currentUser = null;
+        let currentMode = null;
+        let teacherPassword = 'weekplan2024';
+        let githubUrl = null;
+        let isGitHubConfigured = false;
+
+        // GitHub configuration
+        function configureGitHub() {
+            const url = document.getElementById('githubUrl').value.trim();
+            if (url && url.includes('githubusercontent.com')) {
+                githubUrl = url;
+                isGitHubConfigured = true;
+                saveConfig();
+                document.getElementById('githubSetup').style.display = 'none';
+                updateSyncStatus();
+                showGitHubButtons();
+                alert('GitHub configuratie opgeslagen!');
+            } else {
+                alert('Voer een geldige GitHub Raw URL in!');
+            }
+        }
+
+        function skipGitHub() {
+            isGitHubConfigured = false;
+            githubUrl = null;
+            document.getElementById('githubSetup').style.display = 'none';
+            updateSyncStatus();
+            loadData();
+        }
+
+        function updateSyncStatus() {
+            const statusEl = document.getElementById('syncStatus');
+            if (isGitHubConfigured) {
+                statusEl.className = 'sync-status sync-online';
+                statusEl.textContent = 'GitHub geconfigureerd - Download/Upload beschikbaar';
+            } else {
+                statusEl.className = 'sync-status sync-local';
+                statusEl.textContent = 'Lokaal gebruik - Geen synchronisatie';
+            }
+        }
+
+        function showGitHubButtons() {
+            if (isGitHubConfigured) {
+                document.getElementById('downloadBtn').style.display = 'inline-block';
+                document.getElementById('uploadBtn').style.display = 'inline-block';
+            }
+        }
+
+        // Download data from GitHub
+        async function downloadFromGitHub() {
+            if (!githubUrl) return;
+            
+            try {
+                const response = await fetch(githubUrl + '?cachebust=' + Date.now());
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    if (data.students) students = data.students;
+                    if (data.tasks) tasks = data.tasks;
+                    if (data.completion) completionData = data.completion;
+                    if (data.password) teacherPassword = data.password;
+                    
+                    saveDataToLocal();
+                    
+                    if (currentMode) {
+                        updateTable();
+                        updateStats();
+                        if (currentMode === 'teacher') {
+                            updateManagementSections();
+                        } else {
+                            updateStudentProgress();
+                        }
+                    }
+                    
+                    const statusEl = document.getElementById('syncStatus');
+                    statusEl.className = 'sync-status sync-online';
+                    statusEl.textContent = 'Gegevens succesvol gedownload van GitHub!';
+                    
+                    alert('Gegevens succesvol gedownload van GitHub!');
+                } else {
+                    throw new Error('Kon gegevens niet laden van GitHub');
+                }
+            } catch (error) {
+                const statusEl = document.getElementById('syncStatus');
+                statusEl.className = 'sync-status sync-error';
+                statusEl.textContent = 'Fout bij downloaden: ' + error.message;
+                alert('Fout bij downloaden van GitHub: ' + error.message);
+            }
+        }
+
+        // Show upload data
+        function showUploadData() {
+            const data = {
+                students: students,
+                tasks: tasks,
+                completion: completionData,
+                password: teacherPassword,
+                lastUpdated: new Date().toISOString()
+            };
+            
+            document.getElementById('uploadData').value = JSON.stringify(data, null, 2);
+            document.getElementById('uploadModal').style.display = 'block';
+        }
+
+        function hideUploadData() {
+            document.getElementById('uploadModal').style.display = 'none';
+        }
+
+        function copyUploadData() {
+            const textarea = document.getElementById('uploadData');
+            textarea.select();
+            document.execCommand('copy');
+            alert('Data gekopieerd naar klembord! Plak dit in je GitHub data.json bestand.');
+        }
+
+        // Save configuration
+        function saveConfig() {
+            const config = {
+                githubUrl: githubUrl,
+                isGitHubConfigured: isGitHubConfigured
+            };
+            localStorage.setItem('weekplan_config', JSON.stringify(config));
+        }
+
+        // Load configuration
+        function loadConfig() {
+            try {
+                const config = JSON.parse(localStorage.getItem('weekplan_config') || '{}');
+                if (config.githubUrl && config.isGitHubConfigured) {
+                    githubUrl = config.githubUrl;
+                    isGitHubConfigured = config.isGitHubConfigured;
+                    document.getElementById('githubSetup').style.display = 'none';
+                    updateSyncStatus();
+                    showGitHubButtons();
+                }
+            } catch (e) {
+                console.log('Geen configuratie gevonden');
+            }
+        }
+
+        // Save data to localStorage
+        function saveDataToLocal() {
+            try {
+                localStorage.setItem('weekplan_students', JSON.stringify(students));
+                localStorage.setItem('weekplan_tasks', JSON.stringify(tasks));
+                localStorage.setItem('weekplan_completion', JSON.stringify(completionData));
+                localStorage.setItem('weekplan_password', teacherPassword);
+            } catch (e) {
+                console.log('Kon data niet lokaal opslaan');
+            }
+        }
+
+        // Load data from localStorage
+        function loadData() {
+            try {
+                const savedStudents = JSON.parse(localStorage.getItem('weekplan_students') || '[]');
+                const savedTasks = JSON.parse(localStorage.getItem('weekplan_tasks') || '[]');
+                const savedCompletion = JSON.parse(localStorage.getItem('weekplan_completion') || '{}');
+                const savedPassword = localStorage.getItem('weekplan_password');
+                
+                students = savedStudents;
+                tasks = savedTasks;
+                completionData = savedCompletion;
+                if (savedPassword) {
+                    teacherPassword = savedPassword;
+                }
+            } catch (e) {
+                console.log('Geen opgeslagen data gevonden');
+            }
+        }
+
+        // Save data (always to localStorage in this version)
+        function saveData() {
+            saveDataToLocal();
+        }
+
+        // Screen management
+        function hideAllScreens() {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('teacherLoginScreen').classList.add('hidden');
+            document.getElementById('studentLoginScreen').classList.add('hidden');
+            document.getElementById('teacherDashboard').classList.add('hidden');
+            document.getElementById('studentDashboard').classList.add('hidden');
+        }
+
+        function showMainLogin() {
+            hideAllScreens();
+            document.getElementById('loginScreen').classList.remove('hidden');
+        }
+
+        function showTeacherLogin() {
+            hideAllScreens();
+            document.getElementById('teacherLoginScreen').classList.remove('hidden');
+        }
+
+        function showStudentLogin() {
+            hideAllScreens();
+            updateStudentDropdown();
+            document.getElementById('studentLoginScreen').classList.remove('hidden');
+        }
+
+        function updateStudentDropdown() {
+            const select = document.getElementById('studentSelect');
+            select.innerHTML = '<option value="">Kies je naam...</option>';
+            students.forEach(student => {
+                const option = document.createElement('option');
+                option.value = student;
+                option.textContent = student;
+                select.appendChild(option);
+            });
+        }
+
+        function updateStudentLoginButton() {
+            const select = document.getElementById('studentSelect');
+            const button = document.getElementById('studentLoginBtn');
+            button.disabled = !select.value;
+        }
+
+        // Login functions
+        function handleTeacherLogin(event) {
+            if (event.key === 'Enter') {
+                teacherLogin();
+            }
+        }
+
+        function teacherLogin() {
+            const password = document.getElementById('teacherPassword').value;
+            if (password === teacherPassword) {
+                currentUser = 'teacher';
+                currentMode = 'teacher';
+                hideAllScreens();
+                document.getElementById('teacherDashboard').classList.remove('hidden');
+                updateTable();
+                updateStats();
+                updateManagementSections();
+                showGitHubButtons();
+                document.getElementById('teacherPassword').value = '';
+            } else {
+                alert('Verkeerd wachtwoord!');
+                document.getElementById('teacherPassword').value = '';
+            }
+        }
+
+        function studentLogin() {
+            const studentName = document.getElementById('studentSelect').value;
+            if (studentName && students.includes(studentName)) {
+                currentUser = studentName;
+                currentMode = 'student';
+                hideAllScreens();
+                document.getElementById('studentDashboard').classList.remove('hidden');
+                document.getElementById('currentStudentName').textContent = studentName;
+                updateTable();
+                updateStudentProgress();
+            } else {
+                alert('Selecteer een geldige naam!');
+            }
+        }
+
+        function logout() {
+            currentUser = null;
+            currentMode = null;
+            showMainLogin();
+        }
+
+        // Teacher functions
+        function addStudent() {
+            if (currentMode !== 'teacher') return;
+            
+            const nameInput = document.getElementById('studentName');
+            const name = nameInput.value.trim();
+            
+            if (name && !students.includes(name)) {
+                students.push(name);
+                nameInput.value = '';
+                saveData();
+                updateTable();
+                updateStats();
+                updateManagementSections();
+            } else if (students.includes(name)) {
+                alert('Deze leerling bestaat al!');
+            } else {
+                alert('Voer een geldige naam in!');
+            }
+        }
+
+        function addTask() {
+            if (currentMode !== 'teacher') return;
+            
+            const taskInput = document.getElementById('taskName');
+            const task = taskInput.value.trim();
+            
+            if (task && !tasks.includes(task)) {
+                tasks.push(task);
+                taskInput.value = '';
+                saveData();
+                updateTable();
+                updateStats();
+                updateManagementSections();
+            } else if (tasks.includes(task)) {
+                alert('Deze taak bestaat al!');
+            } else {
+                alert('Voer een geldige taak in!');
+            }
+        }
+
+        function editStudent(oldName) {
+            if (currentMode !== 'teacher') return;
+            
+            const newName = prompt('Nieuwe naam voor leerling:', oldName);
+            if (newName && newName.trim() !== '' && newName.trim() !== oldName) {
+                const trimmedName = newName.trim();
+                if (students.includes(trimmedName)) {
+                    alert('Deze naam bestaat al!');
+                    return;
+                }
+                
+                // Update student name
+                const index = students.indexOf(oldName);
+                students[index] = trimmedName;
+                
+                // Update completion data
+                const newCompletionData = {};
+                for (const [key, value] of Object.entries(completionData)) {
+                    if (key.startsWith(oldName + '_')) {
+                        const taskName = key.substring(oldName.length + 1);
+                        newCompletionData[`${trimmedName}_${taskName}`] = value;
+                    } else {
+                        newCompletionData[key] = value;
+                    }
+                }
+                completionData = newCompletionData;
+                
+                saveData();
+                updateTable();
+                updateStats();
+                updateManagementSections();
+            }
+        }
+
+        function removeStudent(name) {
+            if (currentMode !== 'teacher') return;
+            
+            if (confirm(`Weet je zeker dat je leerling "${name}" wilt verwijderen?`)) {
+                students = students.filter(s => s !== name);
+                
+                // Remove completion data for this student
+                const newCompletionData = {};
+                for (const [key, value] of Object.entries(completionData)) {
+                    if (!key.startsWith(name + '_')) {
+                        newCompletionData[key] = value;
+                    }
+                }
+                completionData = newCompletionData;
+                
+                saveData();
+                updateTable();
+                updateStats();
+                updateManagementSections();
+            }
+        }
+
+        function editTask(oldTask) {
+            if (currentMode !== 'teacher') return;
+            
+            const newTask = prompt('Nieuwe naam voor taak:', oldTask);
+            if (newTask && newTask.trim() !== '' && newTask.trim() !== oldTask) {
+                const trimmedTask = newTask.trim();
+                if (tasks.includes(trimmedTask)) {
+                    alert('Deze taak bestaat al!');
+                    return;
+                }
+                
+                // Update task name
+                const index = tasks.indexOf(oldTask);
+                tasks[index] = trimmedTask;
+                
+                // Update completion data
+                const newCompletionData = {};
+                for (const [key, value] of Object.entries(completionData)) {
+                    if (key.endsWith('_' + oldTask)) {
+                        const studentName = key.substring(0, key.length - oldTask.length - 1);
+                        newCompletionData[`${studentName}_${trimmedTask}`] = value;
+                    } else {
+                        newCompletionData[key] = value;
+                    }
+                }
+                completionData = newCompletionData;
+                
+                saveData();
+                updateTable();
+                updateStats();
+                updateManagementSections();
+            }
+        }
+
+        function removeTask(task) {
+            if (currentMode !== 'teacher') return;
+            
+            if (confirm(`Weet je zeker dat je taak "${task}" wilt verwijderen?`)) {
+                tasks = tasks.filter(t => t !== task);
+                
+                // Remove completion data for this task
+                const newCompletionData = {};
+                for (const [key, value] of Object.entries(completionData)) {
+                    if (!key.endsWith('_' + task)) {
+                        newCompletionData[key] = value;
+                    }
+                }
+                completionData = newCompletionData;
+                
+                saveData();
+                updateTable();
+                updateStats();
+                updateManagementSections();
+            }
+        }
+
+        function updateManagementSections() {
+            if (currentMode !== 'teacher') return;
+            
+            // Update student management
+            const studentList = document.getElementById('studentManagementList');
+            studentList.innerHTML = '';
+            students.forEach(student => {
+                const item = document.createElement('div');
+                item.className = 'management-item';
+                item.innerHTML = `
+                    <span>${student}</span>
+                    <button class="btn btn-warning btn-small" onclick="editStudent('${student}')">Bewerk</button>
+                    <button class="btn btn-danger btn-small" onclick="removeStudent('${student}')">Verwijder</button>
+                `;
+                studentList.appendChild(item);
+            });
+            
+            if (students.length === 0) {
+                studentList.innerHTML = '<p style="color: #6c757d; font-style: italic;">Geen leerlingen toegevoegd</p>';
+            }
+            
+            // Update task management
+            const taskList = document.getElementById('taskManagementList');
+            taskList.innerHTML = '';
+            tasks.forEach(task => {
+                const item = document.createElement('div');
+                item.className = 'management-item';
+                item.innerHTML = `
+                    <span>${task}</span>
+                    <button class="btn btn-warning btn-small" onclick="editTask('${task}')">Bewerk</button>
+                    <button class="btn btn-danger btn-small" onclick="removeTask('${task}')">Verwijder</button>
+                `;
+                taskList.appendChild(item);
+            });
+            
+            if (tasks.length === 0) {
+                taskList.innerHTML = '<p style="color: #6c757d; font-style: italic;">Geen taken toegevoegd</p>';
+            }
+            
+            // Update student progress section
+            updateStudentProgressSection();
+        }
+
+        function updateStudentProgressSection() {
+            if (currentMode !== 'teacher' || students.length === 0 || tasks.length === 0) {
+                document.getElementById('studentProgressSection').style.display = 'none';
+                return;
+            }
+            
+            document.getElementById('studentProgressSection').style.display = 'block';
+            const progressList = document.getElementById('studentProgressList');
+            progressList.innerHTML = '';
+            
+            students.forEach(student => {
+                const completedTasks = tasks.filter(task => completionData[`${student}_${task}`]).length;
+                const totalTasks = tasks.length;
+                const percentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+                
+                const item = document.createElement('div');
+                item.className = 'progress-item';
+                item.innerHTML = `
+                    <div class="progress-label">
+                        <span><strong>${student}</strong></span>
+                        <span>${completedTasks} van ${totalTasks} (${percentage}%)</span>
+                    </div>
+                    <div class="progress-bar-small">
+                        <div class="progress-fill-small" style="width: ${percentage}%"></div>
+                    </div>
+                `;
+                progressList.appendChild(item);
+            });
+        }
+
+        function changePassword() {
+            if (currentMode !== 'teacher') return;
+            
+            const newPassword = prompt('Voer een nieuw wachtwoord in:', teacherPassword);
+            if (newPassword && newPassword.trim() !== '') {
+                teacherPassword = newPassword.trim();
+                saveData();
+                alert('Wachtwoord succesvol gewijzigd!');
+            }
+        }
+
+        function clearAll() {
+            if (currentMode !== 'teacher') return;
+            
+            if (confirm('Weet je zeker dat je alle gegevens wilt wissen?')) {
+                students = [];
+                tasks = [];
+                completionData = {};
+                saveData();
+                updateTable();
+                updateStats();
+                updateManagementSections();
+            }
+        }
+
+        // Update table based on current mode
+        function updateTable() {
+            if (currentMode === 'teacher') {
+                updateTeacherTable();
+            } else if (currentMode === 'student') {
+                updateStudentTable();
+            }
+        }
+
+        function updateTeacherTable() {
+            const container = document.getElementById('tableContainerTeacher');
+            
+            if (students.length === 0 || tasks.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h3>Geen gegevens beschikbaar</h3>
+                        <p>Voeg leerlingen en taken toe om te beginnen!</p>
+                    </div>
+                `;
+                document.getElementById('statsTeacher').style.display = 'none';
+                return;
+            }
+
+            document.getElementById('statsTeacher').style.display = 'flex';
+
+            let tableHTML = `
+                <table class="weekplan-table">
+                    <thead>
+                        <tr>
+                            <th>Leerling</th>
+                            ${tasks.map(task => `<th>${task}</th>`).join('')}
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            students.forEach(student => {
+                tableHTML += `<tr><td>${student}</td>`;
+                tasks.forEach(task => {
+                    const key = `${student}_${task}`;
+                    const checked = completionData[key] ? 'checked' : '';
+                    tableHTML += `
+                        <td>
+                            <div class="checkbox-container">
+                                <input type="checkbox" class="custom-checkbox" ${checked} 
+                                       onchange="updateCompletion('${student}', '${task}', this.checked)">
+                            </div>
+                        </td>
+                    `;
+                });
+                tableHTML += '</tr>';
+            });
+
+            tableHTML += '</tbody></table>';
+            container.innerHTML = tableHTML;
+        }
+
+        function updateStudentTable() {
+            const container = document.getElementById('tableContainerStudent');
+            
+            if (students.length === 0 || tasks.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h3>Geen taken beschikbaar</h3>
+                        <p>Je leerkracht heeft nog geen taken toegevoegd.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let tableHTML = `
+                <table class="weekplan-table">
+                    <thead>
+                        <tr>
+                            <th>Leerling</th>
+                            ${tasks.map(task => `<th>${task}</th>`).join('')}
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            // Only show current student's row
+            const student = currentUser;
+            const rowClass = 'student-current-row';
+            
+            tableHTML += `<tr class="${rowClass}"><td>${student}</td>`;
+            tasks.forEach(task => {
+                const key = `${student}_${task}`;
+                const checked = completionData[key] ? 'checked' : '';
+                
+                tableHTML += `
+                    <td>
+                        <div class="checkbox-container">
+                            <input type="checkbox" class="custom-checkbox" ${checked}
+                                   onchange="updateCompletion('${student}', '${task}', this.checked)">
+                        </div>
+                    </td>
+                `;
+            });
+            tableHTML += '</tr>';
+
+            tableHTML += '</tbody></table>';
+            container.innerHTML = tableHTML;
+        }
+
+        function updateCompletion(student, task, completed) {
+            // Students can only change their own tasks
+            if (currentMode === 'student' && student !== currentUser) {
+                return;
+            }
+            
+            const key = `${student}_${task}`;
+            if (completed) {
+                completionData[key] = true;
+            } else {
+                delete completionData[key];
+            }
+            saveData();
+            updateStats();
+            updateStudentProgressSection();
+            
+            if (currentMode === 'student') {
+                updateStudentProgress();
+            }
+        }
+
+        function updateStudentProgress() {
+            if (currentMode !== 'student') return;
+            
+            const student = currentUser;
+            const completedTasks = tasks.filter(task => completionData[`${student}_${task}`]).length;
+            const totalTasks = tasks.length;
+            const percentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+            
+            document.getElementById('studentProgressText').textContent = `${completedTasks} van ${totalTasks}`;
+            document.getElementById('studentProgressBar').style.width = percentage + '%';
+        }
+
+        function updateStats() {
+            if (currentMode !== 'teacher') return;
+            
+            const totalStudents = students.length;
+            const totalTasks = tasks.length;
+            const totalPossible = totalStudents * totalTasks;
+            const completed = Object.keys(completionData).length;
+            const completionRate = totalPossible > 0 ? Math.round((completed / totalPossible) * 100) : 0;
+
+            document.getElementById('totalStudentsTeacher').textContent = totalStudents;
+            document.getElementById('totalTasksTeacher').textContent = totalTasks;
+            document.getElementById('completedTasksTeacher').textContent = completed;
+            document.getElementById('completionRateTeacher').textContent = completionRate + '%';
+            
+            document.getElementById('progressBarTeacher').style.width = completionRate + '%';
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && currentMode === 'teacher') {
+                const activeElement = document.activeElement;
+                if (activeElement.id === 'studentName') {
+                    addStudent();
+                } else if (activeElement.id === 'taskName') {
+                    addTask();
+                }
+            }
+        });
+
+        // Initialize
+        function initApp() {
+            loadConfig();
+            loadData();
+            showMainLogin();
+        }
+
+        // Start the application
+        initApp();
+    </script>
+</body>
+</html>
